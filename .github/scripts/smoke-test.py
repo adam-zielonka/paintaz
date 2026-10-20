@@ -16,7 +16,7 @@ if qt_root:
         part for part in environment["PATH"].split(os.pathsep)
         if qt_root not in part.lower()
     )
-environment["QT_QPA_PLATFORM"] = "offscreen"
+environment.pop("QT_QPA_PLATFORM", None)
 
 with subprocess.Popen([str(executable)], env=environment) as process:
     try:

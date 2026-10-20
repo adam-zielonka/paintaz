@@ -101,7 +101,12 @@ jobs:
       - name: Smoke test deployed application
         env:
           EXECUTABLE: ${{ matrix.executable }}
-        run: python .github/scripts/smoke-test.py "$EXECUTABLE"
+        run: |
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            xvfb-run -a python .github/scripts/smoke-test.py "$EXECUTABLE"
+          else
+            python .github/scripts/smoke-test.py "$EXECUTABLE"
+          fi
 
       - name: Create Windows ZIP
         if: runner.os == 'Windows'
