@@ -1,5 +1,9 @@
 # C++ objects and libs
 
+/build/
+/dist/
+__pycache__/
+
 *.slo
 *.lo
 *.o

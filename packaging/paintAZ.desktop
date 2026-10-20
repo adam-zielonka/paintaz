@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=paintAZ
+Comment=Draw and edit images
+Exec=paintAZ
+Icon=paintAZ
+Categories=Graphics;RasterGraphics;
+Terminal=false
