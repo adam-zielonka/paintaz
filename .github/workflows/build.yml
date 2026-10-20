@@ -56,13 +56,14 @@ jobs:
 
       - name: Set package name
         env:
-          PLATFORM: ${{ matrix.platform }}
+          PACKAGE_PLATFORM: ${{ matrix.platform }}
         run: |
+          set -u
           version="${GITHUB_REF_NAME}"
           if [[ "$GITHUB_REF_TYPE" != tag ]]; then
             version="dev-${GITHUB_SHA:0:7}"
           fi
-          echo "PACKAGE_NAME=paintAZ-${version}-${PLATFORM}" >> "$GITHUB_ENV"
+          echo "PACKAGE_NAME=paintAZ-${version}-${PACKAGE_PLATFORM}" >> "$GITHUB_ENV"
 
       - name: Configure
         run: |
