@@ -105,6 +105,9 @@ private slots:
     void on_actionErase_triggered();
 
 private:
+#ifdef Q_OS_WASM
+    void downloadImage();
+#endif
     Ui::MainWindow *ui;
     Widget *mywidget;
 };

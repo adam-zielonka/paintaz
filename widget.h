@@ -52,7 +52,10 @@ public:
     explicit Widget(QWidget *parent = 0, QAction * actionUndo = 0, QAction * actionRedo = 0);
     ~Widget();
 
-    void setNewImage(int width, int height);
+    static bool validImageSize(const QSize &size);
+    bool setNewImage(int width, int height);
+    bool loadImageData(const QByteArray &data, const QString &name);
+    QByteArray imageData(const char *format) const;
     bool loadImage(QString file);
     bool saveImage(QString file);
     void saveImage();
@@ -96,6 +99,7 @@ public:
     bool setBoldFont();
     bool setItalicsFont();
 private:
+    bool replaceImage(const QImage &next, const QString &name);
     Ui::Widget *ui;
     QString fileName;
     QImage image;

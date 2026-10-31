@@ -1,0 +1,39 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Paint AZ — source, licenses and help</title>
+<style>body{max-width:52rem;margin:2rem auto;padding:0 1rem;font:16px/1.6 system-ui}</style>
+<h1>Paint AZ WebAssembly</h1>
+<p><a href="./">Back to painting</a> · <a href="build-info.json">Exact build / checksums</a></p>
+<p>Paint AZ sources remain <a href="licenses/paintAZ-MIT.txt">MIT licensed</a>, copyright Adam Zielonka.
+Icons are from <a href="https://icons8.com/">Icons8</a>; attribution remains in the application.</p>
+<p>This statically linked web distribution includes Qt 6.10.3 (Core, Gui, Widgets and the JPEG plugin),
+including the Qt WebAssembly platform port. The combined web distribution is provided under
+<a href="licenses/qtbase/LICENSES/GPL-3.0-only.txt">GNU GPL version 3</a>, without warranty.
+This does not replace the MIT license on the application's own source files.</p>
+<p>Qt copyright The Qt Company Ltd. and contributors. Qt's license texts, attribution files and
+third-party notices are included under <code>licenses/qtbase/</code> and in the complete source archive.
+Emscripten runtime and system libraries use MIT, University of Illinois/NCSA and other applicable
+upstream licenses: <a href="licenses/emscripten-4.0.7.txt">Emscripten license</a>,
+<a href="licenses/emsdk-4.0.7.txt">emsdk license</a>; all bundled notices are in their source archives.</p>
+<h2>Corresponding source — no charge</h2>
+<p>These files are served beside the executable, without login or an expiring artifact link.
+The app archive includes build scripts, workflow pins and instructions for rebuilding/modifying the application.</p>
+<ul>
+<li><a href="source/paintAZ.tar.gz">Exact Paint AZ source and build instructions</a></li>
+<li><a href="source/qtbase-everywhere-src-6.10.3.tar.xz">Complete Qt Base 6.10.3 source including bundled third parties</a></li>
+<li><a href="source/emscripten-4.0.7.tar.gz">Complete Emscripten 4.0.7 source including runtime/system libraries</a></li>
+<li><a href="source/emsdk-4.0.7.tar.gz">Emscripten SDK 4.0.7 scripts</a></li>
+</ul>
+<h2>Using this version</h2>
+<p>A current browser with WebAssembly and WebGL is required. Files stay in browser memory;
+no images are uploaded to a server. Open uses your browser's file picker; Save and Save As each
+request a new PNG download. The browser controls its name/location; neither action promises to overwrite
+an existing local file. Download before leaving or reloading: there is no autosave.</p>
+<p>Import: PNG, JPEG and BMP. TIFF is not included in this build (convert it to PNG first).
+Up to 4096 pixels per side and 4,194,304 pixels total; encoded imports are limited to 32 MiB.
+Undo snapshots also consume memory. Text uses Qt's bundled font, not your device fonts.</p>
+<p>This is the shared desktop Qt Widgets interface. On a narrow screen use toolbar overflow menus
+and canvas scrollbars. Touch emulates the mouse; this is not a redesigned mobile drawing UI.
+Qt's browser accessibility and mobile support have limitations; see <a href="https://doc.qt.io/qt-6.10/wasm.html">Qt platform notes</a>.</p>
+<p>Shortcuts: Ctrl+N new, Ctrl+O open, Ctrl+S download, Ctrl+Z undo, Ctrl+Y redo,
+1 freehand, 2 line, 3 rectangle, 4 rounded rectangle, 5 ellipse. Brush → Full fills shapes.</p>
+</html>

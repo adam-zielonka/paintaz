@@ -16,16 +16,13 @@ public:
     ~NewFileDialog();
     int getWidth();
     int getHeight();
-    bool checkAccept();
-
-private slots:
-    void on_buttonBox_accepted();
+    void accept() override;
 
 private:
     Ui::NewFileDialog *ui;
     int height;
     int width;
-    bool accepted;
+
 };
 
 #endif // NEWFILEDIALOG_H

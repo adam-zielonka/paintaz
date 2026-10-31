@@ -1,5 +1,7 @@
 #include "widget.h"
 #include "ui_widget.h"
+#include <QBuffer>
+#include <QImageReader>
 
 Widget::Widget(QWidget *parent, QAction * actionUndo, QAction * actionRedo) :
     QWidget(parent),
@@ -30,28 +32,57 @@ Widget::~Widget()
     delete ui;
 }
 
-void Widget::setNewImage(int width, int height)
+bool Widget::validImageSize(const QSize &size)
 {
-    setMinimumSize(width*scale,height*scale);
-    image = QImage(width,height, QImage::Format_RGB32);
-    image.fill(Qt::white);
+    return size.width() > 0 && size.height() > 0 && size.width() <= 4096
+        && size.height() <= 4096 && qint64(size.width()) * size.height() <= 4194304;
+}
+
+bool Widget::replaceImage(const QImage &next, const QString &name)
+{
+    if (next.isNull() || !validImageSize(next.size())) return false;
+    image = next;
     tempImage = image;
-    fileName = "";
+    setMinimumSize(image.width()*scale, image.height()*scale);
+    fileName = name;
     memento.clear(image);
+    update();
+    return true;
+}
+
+bool Widget::setNewImage(int width, int height)
+{
+    if (!validImageSize(QSize(width, height))) return false;
+    QImage next(width, height, QImage::Format_RGB32);
+    if (next.isNull()) return false;
+    next.fill(Qt::white);
+    return replaceImage(next, QString());
 }
 
 bool Widget::loadImage(QString file)
 {
-    if(image.load(file))
-    {
-        tempImage = image;
-        setMinimumSize(image.size().rwidth()*scale,image.size().rheight()*scale);
-        fileName = file;
-        memento.clear(image);
-        return true;
-    }
-    else
-        return false;
+    QImageReader reader(file);
+    if (!validImageSize(reader.size())) return false;
+    return replaceImage(reader.read(), file);
+}
+
+bool Widget::loadImageData(const QByteArray &data, const QString &name)
+{
+    if (data.size() > 32 * 1024 * 1024) return false;
+    QBuffer buffer;
+    buffer.setData(data);
+    buffer.open(QIODevice::ReadOnly);
+    QImageReader reader(&buffer);
+    if (!validImageSize(reader.size())) return false;
+    return replaceImage(reader.read(), name);
+}
+
+QByteArray Widget::imageData(const char *format) const
+{
+    QByteArray data;
+    QBuffer buffer(&data);
+    if (!buffer.open(QIODevice::WriteOnly) || !image.save(&buffer, format)) return QByteArray();
+    return data;
 }
 
 void Widget::saveImage()
@@ -179,7 +210,7 @@ void Widget::mouseMoveEvent(QMouseEvent * e)
             actualY = e->y()/scale;
             break;
         case DRAW_ROUND_RECT:
-            p.drawRoundRect(GetRect(e->x()/scale,e->y()/scale));
+            p.drawRoundedRect(GetRect(e->x()/scale,e->y()/scale),25,25,Qt::RelativeSize);
             actualX = e->x()/scale;
             actualY = e->y()/scale;
             break;
@@ -239,7 +270,7 @@ void Widget::mouseReleaseEvent(QMouseEvent * e)
         p.drawRect(GetRect(x,y));
         break;
     case DRAW_ROUND_RECT:
-        p.drawRoundRect(GetRect(x,y));
+        p.drawRoundedRect(GetRect(x,y),25,25,Qt::RelativeSize);
         break;
     case DRAW_ELLIPSE:
         p.drawEllipse(GetRect(x,y));

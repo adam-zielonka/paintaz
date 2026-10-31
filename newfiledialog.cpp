@@ -1,43 +1,30 @@
 #include "newfiledialog.h"
 #include "ui_newfiledialog.h"
+#include "widget.h"
+#include <QIntValidator>
 
 NewFileDialog::NewFileDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::NewFileDialog)
+    QDialog(parent), ui(new Ui::NewFileDialog), height(600), width(800)
 {
     ui->setupUi(this);
-    accepted = false;
+    ui->lineEditWidth->setValidator(new QIntValidator(1, 4096, this));
+    ui->lineEditHeight->setValidator(new QIntValidator(1, 4096, this));
+    ui->lineEditWidth->setText("800");
+    ui->lineEditHeight->setText("600");
 }
-
-NewFileDialog::~NewFileDialog()
+NewFileDialog::~NewFileDialog() { delete ui; }
+int NewFileDialog::getWidth() { return width; }
+int NewFileDialog::getHeight() { return height; }
+void NewFileDialog::accept()
 {
-    delete ui;
-}
-
-int NewFileDialog::getWidth()
-{
-    return width;
-}
-
-int NewFileDialog::getHeight()
-{
-    return height;
-}
-
-bool NewFileDialog::checkAccept()
-{
-    if(accepted)
-    {
-        accepted = false;
-        return true;
+    const int w = ui->lineEditWidth->text().toInt();
+    const int h = ui->lineEditHeight->text().toInt();
+    if (!Widget::validImageSize(QSize(w, h))) {
+        ui->labelError->setText(tr("Use 1–4096 per side, up to 4 megapixels."));
+        return;
     }
-    else
-        return false;
-}
-
-void NewFileDialog::on_buttonBox_accepted()
-{
-    accepted = true;
-    height = ui->lineEditHeight->text().toInt();
-    width = ui->lineEditWidth->text().toInt();
+    width = w;
+    height = h;
+    ui->labelError->clear();
+    QDialog::accept();
 }

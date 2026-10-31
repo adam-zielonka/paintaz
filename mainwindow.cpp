@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QFileInfo>
+#include <QPointer>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -24,7 +26,26 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mywidget->setColorButtons(penColorButton,brushColorButton);
 
-    newFile = new NewFileDialog();
+    newFile = new NewFileDialog(this);
+    connect(newFile, &QDialog::accepted, this, [this] {
+        if (!mywidget->setNewImage(newFile->getWidth(), newFile->getHeight())) {
+            ui->statusbar->showMessage(tr("Cannot allocate image; current drawing preserved."), 10000);
+            return;
+        }
+#ifdef Q_OS_WASM
+        ui->actionSave->setEnabled(true);
+#else
+        ui->actionSave->setEnabled(false);
+#endif
+        updateWindowTitle();
+    });
+#ifdef Q_OS_WASM
+    ui->actionSave->setEnabled(true);
+    ui->actionSave->setText(tr("Download PNG"));
+    ui->actionSave_As->setText(tr("Download PNG As"));
+    ui->actionSave->setToolTip(tr("Download a new PNG; browser controls the destination"));
+    ui->actionSave_As->setToolTip(ui->actionSave->toolTip());
+#endif
 
     updateWindowTitle();
 
@@ -103,22 +124,26 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 
 void MainWindow::setPenColor()
 {
-    QColor color = QColorDialog::getColor(mywidget->getPenColor(),this);
-    if(color.isValid())
-    {
+    auto *dialog = new QColorDialog(mywidget->getPenColor(), this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    connect(dialog, &QColorDialog::colorSelected, this, [this](const QColor &color) {
+        if (!color.isValid()) return;
         mywidget->setPenColor(color);
-        penColorButton->setStyleSheet("background-color: "+mywidget->getPenColor().name()+";");
-    }
+        penColorButton->setStyleSheet("background-color: "+color.name()+";");
+    });
+    dialog->open();
 }
 
 void MainWindow::setBrushColor()
 {
-    QColor color = QColorDialog::getColor(mywidget->getPenColor(),this);
-    if(color.isValid())
-    {
+    auto *dialog = new QColorDialog(mywidget->getBrushColor(), this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    connect(dialog, &QColorDialog::colorSelected, this, [this](const QColor &color) {
+        if (!color.isValid()) return;
         mywidget->setBrushColor(color);
-        brushColorButton->setStyleSheet("background-color: "+mywidget->getBrushColor().name()+";");
-    }
+        brushColorButton->setStyleSheet("background-color: "+color.name()+";");
+    });
+    dialog->open();
 }
 
 void MainWindow::setBoldFont()
@@ -195,18 +220,26 @@ void MainWindow::on_actionFull_triggered()
 
 void MainWindow::on_actionNew_triggered()
 {
-    newFile->exec();
-    if(newFile->checkAccept())
-    {
-        mywidget->setNewImage(newFile->getWidth(),newFile->getHeight());
-        mywidget->update();
-        ui->actionSave->setEnabled(false);
-        updateWindowTitle();
-    }
+    newFile->open();
 }
 
 void MainWindow::on_actionOpen_triggered()
 {
+#ifdef Q_OS_WASM
+    const QPointer<MainWindow> window(this);
+    QFileDialog::getOpenFileContent(tr("Images (*.png *.jpg *.jpeg *.bmp);;All files (*)"),
+        [window](const QString &name, const QByteArray &data) {
+            if (!window || name.isEmpty()) return; // cancellation leaves the drawing intact
+            if (!window->mywidget->loadImageData(data, name)) {
+                window->ui->statusbar->showMessage(
+                    tr("Cannot open image (PNG/JPEG/BMP, max 4096 per side and 4 megapixels). Current drawing preserved."), 15000);
+                return;
+            }
+            window->ui->statusbar->showMessage(tr("Imported image. Save downloads a new PNG."), 8000);
+            window->updateWindowTitle();
+        }, this);
+#else
+
     QString selfilter = tr("JPEG (*.jpg *.jpeg)");
     QString file = QFileDialog::getOpenFileName(
             this,
@@ -233,15 +266,24 @@ void MainWindow::on_actionOpen_triggered()
         ui->actionSave->setEnabled(true);
         updateWindowTitle();
     }
+#endif
 }
 
 void MainWindow::on_actionSave_triggered()
 {
+#ifdef Q_OS_WASM
+    downloadImage();
+#else
     mywidget->saveImage();
+#endif
 }
 
 void MainWindow::on_actionSave_As_triggered()
 {
+#ifdef Q_OS_WASM
+    downloadImage();
+#else
+
     QString selfilter = tr("JPEG (*.jpg *.jpeg)");
     QString file = QFileDialog::getSaveFileName(
             this,
@@ -266,7 +308,22 @@ void MainWindow::on_actionSave_As_triggered()
         ui->actionSave->setEnabled(true);
         updateWindowTitle();
     }
+#endif
 }
+
+#ifdef Q_OS_WASM
+void MainWindow::downloadImage()
+{
+    const QByteArray data = mywidget->imageData("PNG");
+    if (data.isEmpty()) {
+        ui->statusbar->showMessage(tr("Cannot encode PNG. Current drawing preserved."), 10000);
+        return;
+    }
+    QString name = QFileInfo(mywidget->getFileName()).completeBaseName();
+    if (name.isEmpty()) name = "paintAZ";
+    QFileDialog::saveFileContent(data, name + ".png", this);
+}
+#endif
 
 void MainWindow::on_actionZoom_In_triggered()
 {
