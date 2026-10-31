@@ -32,6 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
             ui->statusbar->showMessage(tr("Cannot allocate image; current drawing preserved."), 10000);
             return;
         }
+        ui->statusbar->clearMessage();
 #ifdef Q_OS_WASM
         ui->actionSave->setEnabled(true);
 #else

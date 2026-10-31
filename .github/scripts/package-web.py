@@ -24,9 +24,9 @@ archives = {
         'https://download.qt.io/archive/qt/6.10/6.10.3/submodules/qtbase-everywhere-src-6.10.3.tar.xz',
         '383dc907816338f0cba72088a524c07458dfc69ce684ca9132fcc4fe91c24b0b'),
     'emscripten-4.0.7.tar.gz': (
-        'https://codeload.github.com/emscripten-core/emscripten/tar.gz/8dc91db45bf96c174531006839472a3924d105aa', None),
+        'https://codeload.github.com/emscripten-core/emscripten/tar.gz/8dc91db45bf96c174531006839472a3924d105aa', 'cbd6ca8af52c505490d447463f76f1dc29c3ce57412f862f1fd2a90e11e784df'),
     'emsdk-4.0.7.tar.gz': (
-        'https://codeload.github.com/emscripten-core/emsdk/tar.gz/c69d433d8509c5c64564c2f0d054bf102a5cf67e', None),
+        'https://codeload.github.com/emscripten-core/emsdk/tar.gz/c69d433d8509c5c64564c2f0d054bf102a5cf67e', '3d6139363e2a2e2cf2b8150771061c07f5c26394304be99f3efb02f56f26b6fd'),
 }
 manifest = {'commit': sha, 'qt': '6.10.3', 'emscripten': '4.0.7', 'files': {}}
 for name, (url, expected) in archives.items():
@@ -58,7 +58,7 @@ for required in ('licenses/qtbase/LICENSES/GPL-3.0-only.txt',
                  'licenses/emsdk-4.0.7.txt', 'source/paintAZ.tar.gz'):
     if not (out / required).is_file():
         raise SystemExit(f'Missing distribution file: {required}')
-for name in ('paintAZ.js', 'paintAZ.wasm', 'qtloader.js'):
+for name in ('paintAZ.js', 'paintAZ.wasm', 'qtloader.js', 'index.html', 'notices.html', 'source/paintAZ.tar.gz'):
     data = (out / name).read_bytes()
     manifest['files'][name] = {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
 (out / 'build-info.json').write_text(json.dumps(manifest, indent=2) + '\n')

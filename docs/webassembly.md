@@ -80,7 +80,13 @@ never applies a partially selected value. Desktop open/save keep their native
 path behavior. Web open uses `QFileDialog::getOpenFileContent`; saving encodes
 PNG with `QBuffer` and uses `QFileDialog::saveFileContent`.
 [Qt's file API documentation](https://doc.qt.io/qt-6.10/qfiledialog.html#getOpenFileContent)
-explains browser sandbox access. The browser controls download name and
+explains browser sandbox access. Qt6.10 normally prefers the File System Access
+API on Chromium, which opens an OS save picker rather than generating a download.
+This page intentionally selects Qt's HTML file-input/download fallback by hiding
+`showOpenFilePicker` within the app page before loading Qt. This is a pinned
+Qt6.10 compatibility choice, also used in the tests, with actual browser file
+selection/downloads (no mocked file data or test-only app hooks). Recheck this
+detection when upgrading Qt. The browser controls download name and
 location; Save and Save As both request a new download and cannot promise to
 overwrite the original file. An imported JPEG/BMP is downloaded as PNG.
 
@@ -115,6 +121,11 @@ artifacts or a third-party source URL. The archive includes all Qt Base source
 source, plus emsdk scripts. All upstream copyright and license notices are
 preserved. No other Qt module is linked.
 
+A verified Release build of this port produced a 14,044,742-byte Wasm,
+226,862-byte app JS and 12,354-byte Qt loader (about 13.62 MiB combined,
+uncompressed). The complete downloadable distribution with source was about
+95 MiB on disk. Exact numbers for each revision remain in the manifest.
+
 `build-info.json` identifies the exact commit, toolchain, file hashes and raw
 JS/Wasm sizes for that deployment. Source archives are downloaded only when
 requested; they are not part of application startup. Server compression may
@@ -125,7 +136,8 @@ GitHub Pages compresses every asset.
 
 The browser smoke test drives actual keyboard, mouse, file picker and downloads
 in the compiled app, checks saved image dimensions/pixels, and captures only
-synthetic drawings. It does not replace an independent reviewer. The desktop
+synthetic drawings. It also checks a 390x844 viewport and a CDP-emulated touch
+stroke by its exported pixels; this is not evidence from a physical phone. It does not replace an independent reviewer. The desktop
 workflow retains Linux/Windows/macOS build, packaging and native startup smoke,
 and adds QtTest checks for image transactions, history and asynchronous dialogs.
 

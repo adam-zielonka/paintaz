@@ -19,6 +19,9 @@
   <script src="paintAZ.js"></script>
   <script src="qtloader.js"></script>
   <script>
+    // Qt 6.10 prefers File System Access if present. Select its HTML input/download
+    // fallback so Save always downloads a new file and never retains a file handle.
+    Object.defineProperty(window, 'showOpenFilePicker', {value:undefined, configurable:true});
     const status = document.getElementById('status');
     qtLoad({qt: {
       entryFunction: window.paintAZ_entry,

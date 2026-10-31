@@ -1,9 +1,11 @@
 name: WebAssembly
 on:
-  push:
-    branches: [main, feat/qt-wasm-issue37]
   pull_request:
   workflow_dispatch:
+  workflow_run:
+    workflows: [Build and release]
+    types: [completed]
+    branches: [main]
 permissions:
   contents: read
 concurrency:
@@ -11,10 +13,13 @@ concurrency:
   cancel-in-progress: true
 jobs:
   web:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: Install matching Qt host tools
         id: host
         uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4.4.1
@@ -63,21 +68,59 @@ jobs:
         run: |
           npm install --prefix tests/web --ignore-scripts --package-lock=false
           tests/web/node_modules/.bin/playwright install --with-deps chromium
-      - name: Browser startup
-        run: node tests/web/smoke.mjs --dir dist/web --startup-only
+      - name: Browser image and UI workflows
+        run: node tests/web/smoke.mjs --dir dist/web
       - name: Upload browser evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: web-test-results-${{ github.sha }}
+          name: web-test-results-${{ github.event.workflow_run.head_sha || github.sha }}
           path: test-results/web
           if-no-files-found: ignore
       - name: Upload web build
         if: always()
-
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: paintAZ-web-${{ github.sha }}
+          name: paintAZ-web-${{ github.event.workflow_run.head_sha || github.sha }}
           path: dist/web
           retention-days: 14
           if-no-files-found: error
+
+  deploy:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    needs: web
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Verify main still points to the tested commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          actual=$(gh api "repos/${{ github.repository }}/git/ref/heads/main" --jq .object.sha)
+          test "$actual" = "$EXPECTED_SHA"
+      - name: Download tested distribution
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: paintAZ-web-${{ github.event.workflow_run.head_sha }}
+          path: web-site
+      - name: Configure Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: web-site
+      - name: Publish tested build
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
