@@ -87,8 +87,8 @@ jobs:
           cd build/tests
           qmake ../../tests/desktop/tests.pro CONFIG+=release CONFIG-=debug CONFIG-=debug_and_release
           if [[ "$RUNNER_OS" == Windows ]]; then
-            nmake /NOLOGO
-            QT_QPA_PLATFORM=offscreen ./release/paintAZ-tests.exe
+            MSYS_NO_PATHCONV=1 nmake /NOLOGO
+            QT_QPA_PLATFORM=offscreen ./paintAZ-tests.exe
           else
             make -j3
             QT_QPA_PLATFORM=offscreen ./paintAZ-tests

@@ -1,5 +1,7 @@
 QT += core gui widgets testlib
-CONFIG += testcase c++11
+CONFIG += testcase c++11 console
+CONFIG -= app_bundle
+DESTDIR = .
 TARGET = paintAZ-tests
 INCLUDEPATH += ../..
 SOURCES += tst_workflows.cpp ../../mainwindow.cpp ../../widget.cpp ../../newfiledialog.cpp ../../memento.cpp ../../fillspace.cpp

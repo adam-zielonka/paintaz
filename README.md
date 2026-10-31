@@ -8,6 +8,18 @@ All icons used in this app come from [icons8.com](https://icons8.com/).
 
 ![paintAZ.png](./img/paintAZ.png)
 
+## Browser version
+
+[Open Paint AZ in your browser](https://adam-zielonka.github.io/paintaz/).
+The web build uses the same C++/Qt drawing code. Open imports PNG/JPEG/BMP;
+Save downloads a new PNG. Download before reloading: drawings stay in memory.
+A browser with WebAssembly and WebGL is required. TIFF is not included in the
+web build. This is the desktop Qt interface, with limited mobile ergonomics.
+
+[Build instructions, tests, limits and licensing](docs/webassembly.md).
+The web site includes complete corresponding source and third-party notices;
+the application's own source remains MIT licensed.
+
 ## Downloads
 
 Download the latest version from [GitHub Releases](https://github.com/adam-zielonka/paintaz/releases/latest):

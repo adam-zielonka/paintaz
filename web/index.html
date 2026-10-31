@@ -21,7 +21,7 @@
   <script>
     const status = document.getElementById('status');
     qtLoad({qt: {
-      entryFunction: window.paintAZ,
+      entryFunction: window.paintAZ_entry,
       containerElements: [document.getElementById('screen')],
       onLoaded: () => { status.hidden = true; document.body.dataset.ready = 'true'; },
       onExit: data => { status.hidden = false; status.textContent = 'Application exited: ' + JSON.stringify(data); }
