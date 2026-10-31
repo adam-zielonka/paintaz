@@ -53,6 +53,11 @@ for name in ('emscripten-4.0.7.tar.gz', 'emsdk-4.0.7.tar.gz'):
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(archive.extractfile(member).read())
 shutil.copyfile('LICENSE', out / 'licenses/paintAZ-MIT.txt')
+for required in ('licenses/qtbase/LICENSES/GPL-3.0-only.txt',
+                 'licenses/paintAZ-MIT.txt', 'licenses/emscripten-4.0.7.txt',
+                 'licenses/emsdk-4.0.7.txt', 'source/paintAZ.tar.gz'):
+    if not (out / required).is_file():
+        raise SystemExit(f'Missing distribution file: {required}')
 for name in ('paintAZ.js', 'paintAZ.wasm', 'qtloader.js'):
     data = (out / name).read_bytes()
     manifest['files'][name] = {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
