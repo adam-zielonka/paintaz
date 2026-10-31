@@ -42,3 +42,5 @@ CMakeLists.txt.user*
 
 /.emsdk/
 /test-results/
+
+/tests/web/node_modules/

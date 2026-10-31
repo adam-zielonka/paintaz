@@ -1,0 +1,8 @@
+QT += core gui widgets testlib
+CONFIG += testcase c++11
+TARGET = paintAZ-tests
+INCLUDEPATH += ../..
+SOURCES += tst_workflows.cpp ../../mainwindow.cpp ../../widget.cpp ../../newfiledialog.cpp ../../memento.cpp ../../fillspace.cpp
+HEADERS += ../../mainwindow.h ../../widget.h ../../newfiledialog.h ../../memento.h ../../fillspace.h
+FORMS += ../../mainwindow.ui ../../widget.ui ../../newfiledialog.ui
+RESOURCES += ../../resources.qrc

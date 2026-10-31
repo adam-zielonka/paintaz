@@ -98,7 +98,7 @@ void Memento::clear(QImage image)
     imageListUndo << image;
     imageListRedo.clear();
     undo->setDisabled(true);
-    undo->setDisabled(true);
+    redo->setDisabled(true);
     undoAgain = false;
     redoAgain = false;
 }

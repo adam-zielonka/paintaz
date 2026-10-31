@@ -45,20 +45,35 @@ jobs:
           path: .emsdk
       - name: Build release
         env:
-          QT_WASM: ${{ steps.wasm.outputs.qtPath }}
-          QT_HOST: ${{ steps.host.outputs.qtPath }}
+          QT_WASM: ${{ runner.temp }}/qt/Qt/6.10.3/wasm_singlethread
+          QT_HOST: ${{ runner.temp }}/qt/Qt/6.10.3/gcc_64
         run: |
           .emsdk/emsdk install 4.0.7
           .emsdk/emsdk activate 4.0.7
           source .emsdk/emsdk_env.sh
           em++ --version
-          "$QT_HOST/bin/moc" --version
+          "$QT_HOST/libexec/moc" --version
           "$QT_WASM/bin/qt-cmake" -S . -B build/web -G Ninja \
             -DCMAKE_BUILD_TYPE=Release -DQT_HOST_PATH="$QT_HOST"
           cmake --build build/web --parallel 3
       - name: Assemble distributable with corresponding source
         run: python3 .github/scripts/package-web.py
+      - name: Install browser test tools (isolated runner)
+        run: |
+          npm install --prefix tests/web --ignore-scripts --package-lock=false
+          tests/web/node_modules/.bin/playwright install --with-deps chromium
+      - name: Browser startup
+        run: node tests/web/smoke.mjs --dir dist/web --startup-only
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: web-test-results-${{ github.sha }}
+          path: test-results/web
+          if-no-files-found: ignore
       - name: Upload web build
+        if: always()
+
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: paintAZ-web-${{ github.sha }}
