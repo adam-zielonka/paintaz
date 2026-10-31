@@ -7,6 +7,67 @@ class Workflows : public QObject
 {
     Q_OBJECT
 private slots:
+    void stationaryClickHistory()
+    {
+        MainWindow window;
+        Widget *canvas = window.findChild<Widget *>();
+        QVERIFY(canvas);
+        QVERIFY(canvas->setNewImage(64, 48));
+        auto undo = window.findChild<QAction *>("actionUndo");
+        auto redo = window.findChild<QAction *>("actionRedo");
+        QVERIFY(undo);
+        QVERIFY(redo);
+        const QImage blank = QImage::fromData(canvas->imageData("PNG"));
+        canvas->setPaintDefault();
+        QTest::mouseClick(canvas, Qt::LeftButton, Qt::NoModifier, QPoint(20, 20));
+        QVERIFY(!undo->isEnabled());
+        canvas->undoImage();
+        QCOMPARE(QImage::fromData(canvas->imageData("PNG")), blank);
+        canvas->setDrawLine();
+        QTest::mousePress(canvas, Qt::LeftButton, Qt::NoModifier, QPoint(5, 8));
+        QTest::mouseRelease(canvas, Qt::LeftButton, Qt::NoModifier, QPoint(50, 8));
+        const QImage painted = QImage::fromData(canvas->imageData("PNG"));
+        QCOMPARE(painted.pixelColor(20, 8), QColor(Qt::black));
+        canvas->undoImage();
+        QCOMPARE(QImage::fromData(canvas->imageData("PNG")), blank);
+        canvas->setPaintDefault();
+        QTest::mouseMove(canvas, QPoint(15, 15));
+        QTest::mouseClick(canvas, Qt::LeftButton, Qt::NoModifier, QPoint(20, 20));
+        QVERIFY(!undo->isEnabled());
+        QVERIFY(redo->isEnabled());
+        canvas->redoImage();
+        QCOMPARE(QImage::fromData(canvas->imageData("PNG")), painted);
+        QVERIFY(undo->isEnabled());
+        QVERIFY(!redo->isEnabled());
+    }
+    void historyBranches()
+    {
+        QAction undo(nullptr), redo(nullptr);
+        Memento history(&undo, &redo);
+        QImage white(4, 4, QImage::Format_RGB32);
+        white.fill(Qt::white);
+        QImage black = white, red = white, green = white;
+        black.fill(Qt::black);
+        red.fill(Qt::red);
+        green.fill(Qt::green);
+        history.clear(white);
+        history.mementoImage(black);
+        history.mementoImage(red);
+        QCOMPARE(history.undoImage(), black);
+        history.drawInit(black); // Hover/pre-draw initialization cannot edit history.
+        history.mementoImage(black);
+        QCOMPARE(history.redoImage(), red);
+        QCOMPARE(history.undoImage(), black);
+        QCOMPARE(history.undoImage(), white);
+        QVERIFY(!undo.isEnabled());
+        QCOMPARE(history.undoImage(), white);
+        QCOMPARE(history.redoImage(), black);
+        history.mementoImage(green); // A real edit, unlike a no-op, replaces redo.
+        QVERIFY(!redo.isEnabled());
+        QCOMPARE(history.redoImage(), green);
+        QCOMPARE(history.undoImage(), black);
+        QCOMPARE(history.undoImage(), white);
+    }
     void imageTransactions()
     {
         MainWindow window;

@@ -123,6 +123,27 @@ try {
     const box=await page.locator('canvas').first().boundingBox();
     const origin={x:box.x+1,y:box.y+139};
     await newImage(64,48);
+    const blank = await download();
+    await shortcut('1');
+    await page.mouse.click(origin.x+20,origin.y+20);
+    await shortcut('Control+z');
+    assert.deepEqual(errors, [], 'stationary click followed by Undo must not trap');
+    assert.deepEqual((await download()).pixels,blank.pixels);
+    await shortcut('2');
+    await drag(origin.x+5,origin.y+8,origin.x+50,origin.y+8);
+    const beforeUndo = await download();
+    assert.deepEqual(pixel(beforeUndo,20,8),[0,0,0]);
+    await shortcut('Control+z');
+    assert.deepEqual((await download()).pixels,blank.pixels);
+    await shortcut('1');
+    await page.mouse.click(origin.x+20,origin.y+20);
+    await shortcut('Control+y');
+    assert.deepEqual((await download()).pixels,beforeUndo.pixels,
+      'stationary click after Undo must preserve Redo');
+    await shortcut('Control+z');
+    assert.deepEqual((await download()).pixels,blank.pixels);
+    report.tests.push('stationary click creates no undo step and preserves redo pixels');
+    await newImage(64,48);
     let saved=await download();
     assert.equal(saved.width,64); assert.equal(saved.height,48);
     assert.deepEqual(pixel(saved,20,5),[255,255,255]);

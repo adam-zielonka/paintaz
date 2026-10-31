@@ -12,8 +12,6 @@ private:
     QAction * redo;
     QList<QImage> imageListUndo;
     QList<QImage> imageListRedo;
-    bool undoAgain;
-    bool redoAgain;
 public:
     Memento(QAction *undo, QAction *redo);
     void mementoImage(QImage image);

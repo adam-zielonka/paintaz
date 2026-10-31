@@ -2,8 +2,6 @@
 
 Memento::Memento(QAction *undo, QAction *redo)
 {
-    this->undoAgain = false;
-    this->redoAgain = false;
     this->undo = undo;
     this->redo = redo;
 
@@ -13,83 +11,38 @@ Memento::Memento(QAction *undo, QAction *redo)
 
 void Memento::mementoImage(QImage image)
 {
-    if(!imageListUndo.isEmpty())
-    {
-        if(imageListUndo.last() != image)
-        {
-            imageListUndo << image;
-        }
-    }
-    else
-    {
-        imageListUndo << image;
-    }
-    undo->setEnabled(true);
-    undoAgain = false;
-
+    // The undo stack always ends with the current image. A no-op must not
+    // create an undo step or discard an existing redo branch.
+    if (!imageListUndo.isEmpty() && imageListUndo.last() == image)
+        return;
+    imageListUndo << image;
+    undo->setEnabled(imageListUndo.size() > 1);
     imageListRedo.clear();
     redo->setEnabled(false);
-    redoAgain = false;
 }
 
 QImage Memento::undoImage()
 {
-    if(!undoAgain)
-    {
+    if (imageListUndo.size() > 1)
         imageListRedo << imageListUndo.takeLast();
-    }
-    undoAgain = true;
-    redoAgain = false;
-    QImage image = imageListUndo.takeLast();
-    if(!imageListUndo.isEmpty())
-        undo->setEnabled(true);
-    else
-    {
-        undo->setEnabled(false);
-        imageListUndo << image;
-    }
-
-    redo->setEnabled(true);
-    imageListRedo << image;
-
-    return image;
+    undo->setEnabled(imageListUndo.size() > 1);
+    redo->setEnabled(!imageListRedo.isEmpty());
+    return imageListUndo.isEmpty() ? QImage() : imageListUndo.last();
 }
 
 QImage Memento::redoImage()
 {
-    if(!redoAgain)
-    {
-        if(imageListUndo.size() != 1)
-            imageListUndo << imageListRedo.takeLast();
-        else
-            imageListRedo.takeLast();
-    }
-    redoAgain = true;
-    undoAgain = false;
-    QImage image = imageListRedo.takeLast();
-    if(!imageListRedo.isEmpty())
-        redo->setEnabled(true);
-    else
-        redo->setEnabled(false);
-
-    undo->setEnabled(true);
-    imageListUndo << image;
-
-    return image;
+    if (!imageListRedo.isEmpty())
+        imageListUndo << imageListRedo.takeLast();
+    undo->setEnabled(imageListUndo.size() > 1);
+    redo->setEnabled(!imageListRedo.isEmpty());
+    return imageListUndo.isEmpty() ? QImage() : imageListUndo.last();
 }
 
 void Memento::drawInit(QImage image)
 {
     if(imageListUndo.isEmpty())
-    {
         imageListUndo << image;
-        undoAgain = false;
-    }
-    else if(undoAgain && imageListUndo.last() != image)
-    {
-        imageListUndo << image;
-        undoAgain = false;
-    }
 }
 
 void Memento::clear(QImage image)
@@ -99,6 +52,4 @@ void Memento::clear(QImage image)
     imageListRedo.clear();
     undo->setDisabled(true);
     redo->setDisabled(true);
-    undoAgain = false;
-    redoAgain = false;
 }
