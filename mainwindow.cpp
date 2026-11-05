@@ -239,7 +239,7 @@ void MainWindow::showAbout()
     auto *layout = new QVBoxLayout(dialog);
     auto *credits = new QLabel(tr("<h3>Paint AZ</h3>"
         "<p>A cross-platform painting application built with Qt %1.</p>"
-        "<p>Author: <a href=\"https://adamzielonka.pro/\">adamzielonka.pro</a><br>"
+        "<p>Author: <a href=\"https://adam-zielonka.github.io/\">adam-zielonka.github.io</a><br>"
         "Icons from: <a href=\"https://icons8.com/\">icons8.com</a></p>"
         "<p>Paint AZ source code is MIT licensed. See <b>Help → Licenses, source &amp; help</b> "
         "for source code, third-party licenses and usage details.</p>").arg(QString::fromLatin1(qVersion())), dialog);

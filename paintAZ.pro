@@ -9,7 +9,7 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
-VERSION = 1.1.0
+VERSION = 1.1.1
 
 TARGET = paintAZ
 TEMPLATE = app

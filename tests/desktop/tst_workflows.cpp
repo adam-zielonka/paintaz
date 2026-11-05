@@ -65,7 +65,7 @@ private slots:
         QString text;
         for (auto *label : about->findChildren<QLabel *>()) text += label->text();
         QVERIFY(text.contains("https://icons8.com/"));
-        QVERIFY(text.contains("https://adamzielonka.pro/"));
+        QVERIFY(text.contains("https://adam-zielonka.github.io/"));
         QVERIFY(text.contains(QString::fromLatin1(qVersion())));
         about->reject();
     }
