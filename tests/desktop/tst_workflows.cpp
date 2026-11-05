@@ -31,6 +31,9 @@ private slots:
         auto *welcome = window.findChild<QDialog *>("welcomeDialog");
         QVERIFY(welcome);
         QVERIFY(welcome->isVisible());
+        const auto *intro = welcome->findChild<QLabel *>();
+        QVERIFY(intro);
+        QVERIFY(intro->height() >= intro->heightForWidth(intro->width()));
         auto *remember = welcome->findChild<QCheckBox *>("doNotShowAgain");
         QVERIFY(remember);
         QVERIFY(remember->isChecked());

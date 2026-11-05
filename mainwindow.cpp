@@ -225,7 +225,8 @@ void MainWindow::showQuickStart()
         settings.setValue("welcome/doNotShowAgain", remember->isChecked());
         settings.sync();
     });
-    dialog->resize(qMin(480, screen()->availableGeometry().width() - 24), dialog->sizeHint().height());
+    const int width = qMin(480, screen()->availableGeometry().width() - 24);
+    dialog->resize(width, qMax(dialog->sizeHint().height(), layout->totalHeightForWidth(width)));
     dialog->open();
 }
 
@@ -248,7 +249,8 @@ void MainWindow::showAbout()
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
     layout->addWidget(buttons);
     connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
-    dialog->resize(qMin(480, screen()->availableGeometry().width() - 24), dialog->sizeHint().height());
+    const int width = qMin(480, screen()->availableGeometry().width() - 24);
+    dialog->resize(width, qMax(dialog->sizeHint().height(), layout->totalHeightForWidth(width)));
     dialog->open();
 }
 
