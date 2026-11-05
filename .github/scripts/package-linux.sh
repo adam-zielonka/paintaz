@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+case "${BINARY_ARCH:-$(uname -m)}" in
+  x86_64) appimage_arch=x86_64 ;;
+  arm64|aarch64) appimage_arch=aarch64 ;;
+  *) echo "Unsupported AppImage architecture: ${BINARY_ARCH:-$(uname -m)}" >&2; exit 1 ;;
+esac
+
 cd build
 
 # Pinned releases; extracting the tools avoids requiring FUSE on the runner.
 curl --fail --location --retry 3 \
-  https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20251107-1/linuxdeploy-x86_64.AppImage \
+  "https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20251107-1/linuxdeploy-${appimage_arch}.AppImage" \
   --output linuxdeploy.AppImage
 curl --fail --location --retry 3 \
-  https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/1-alpha-20250213-1/linuxdeploy-plugin-qt-x86_64.AppImage \
+  "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/1-alpha-20250213-1/linuxdeploy-plugin-qt-${appimage_arch}.AppImage" \
   --output linuxdeploy-plugin-qt.AppImage
 chmod +x linuxdeploy.AppImage linuxdeploy-plugin-qt.AppImage
 ./linuxdeploy.AppImage --appimage-extract >/dev/null

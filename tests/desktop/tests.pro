@@ -1,5 +1,5 @@
 QT += core gui widgets testlib
-CONFIG += testcase c++11 console
+CONFIG += testcase c++17 console
 CONFIG -= app_bundle
 DESTDIR = .
 TARGET = paintAZ-tests

@@ -20,15 +20,15 @@ sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
 subprocess.run(['git', 'archive', '--format=tar.gz', '--prefix=paintAZ/',
                 '-o', str(source_dir / 'paintAZ.tar.gz'), 'HEAD'], check=True)
 archives = {
-    'qtbase-everywhere-src-6.10.3.tar.xz': (
-        'https://download.qt.io/archive/qt/6.10/6.10.3/submodules/qtbase-everywhere-src-6.10.3.tar.xz',
-        '383dc907816338f0cba72088a524c07458dfc69ce684ca9132fcc4fe91c24b0b'),
-    'emscripten-4.0.7.tar.gz': (
-        'https://codeload.github.com/emscripten-core/emscripten/tar.gz/8dc91db45bf96c174531006839472a3924d105aa', 'cbd6ca8af52c505490d447463f76f1dc29c3ce57412f862f1fd2a90e11e784df'),
-    'emsdk-4.0.7.tar.gz': (
-        'https://codeload.github.com/emscripten-core/emsdk/tar.gz/c69d433d8509c5c64564c2f0d054bf102a5cf67e', '3d6139363e2a2e2cf2b8150771061c07f5c26394304be99f3efb02f56f26b6fd'),
+    'qtbase-everywhere-src-6.12.0.tar.xz': (
+        'https://download.qt.io/official_releases/qt/6.12/6.12.0/submodules/qtbase-everywhere-src-6.12.0.tar.xz',
+        'a951bd163c7b80fc6b8c88d7668fb56abf91c152373e13c10666763238131307'),
+    'emscripten-5.0.5.tar.gz': (
+        'https://codeload.github.com/emscripten-core/emscripten/tar.gz/bc569045b14c3fa7b960734ed2c50da7b20adea4', '80aff1befd18387bc05c582ddc7d78abd5b5dea4c4977c54f9b3b4199c963ff3'),
+    'emsdk-5.0.5.tar.gz': (
+        'https://codeload.github.com/emscripten-core/emsdk/tar.gz/c9ef2c9d6000341d667a32a807ba47ca489d1e1b', 'bdedc297aa32a5ca7a7a796b1e9c89bb1b05b36242906f11428a244c42101e17'),
 }
-manifest = {'commit': sha, 'qt': '6.10.3', 'emscripten': '4.0.7', 'files': {}}
+manifest = {'commit': sha, 'qt': '6.12.0', 'emscripten': '5.0.5', 'files': {}}
 for name, (url, expected) in archives.items():
     dest = source_dir / name
     if not dest.exists():
@@ -38,7 +38,7 @@ for name, (url, expected) in archives.items():
         raise SystemExit(f'Checksum mismatch: {name}')
     manifest['files']['source/' + name] = {'sha256': digest, 'source': url}
 # Preserve all upstream license texts, notices, attributions and third-party source.
-with tarfile.open(source_dir / 'qtbase-everywhere-src-6.10.3.tar.xz') as archive:
+with tarfile.open(source_dir / 'qtbase-everywhere-src-6.12.0.tar.xz') as archive:
     for member in archive.getmembers():
         relative = Path(*Path(member.name).parts[1:])
         if member.isfile() and relative.parts and (relative.parts[0] == 'LICENSES'
@@ -46,7 +46,7 @@ with tarfile.open(source_dir / 'qtbase-everywhere-src-6.10.3.tar.xz') as archive
             dest = out / 'licenses/qtbase' / relative
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes(archive.extractfile(member).read())
-for name in ('emscripten-4.0.7.tar.gz', 'emsdk-4.0.7.tar.gz'):
+for name in ('emscripten-5.0.5.tar.gz', 'emsdk-5.0.5.tar.gz'):
     with tarfile.open(source_dir / name) as archive:
         member = next(m for m in archive.getmembers() if m.name.endswith('/LICENSE'))
         dest = out / 'licenses' / name.replace('.tar.gz', '.txt')
@@ -54,8 +54,8 @@ for name in ('emscripten-4.0.7.tar.gz', 'emsdk-4.0.7.tar.gz'):
         dest.write_bytes(archive.extractfile(member).read())
 shutil.copyfile('LICENSE', out / 'licenses/paintAZ-MIT.txt')
 for required in ('licenses/qtbase/LICENSES/GPL-3.0-only.txt',
-                 'licenses/paintAZ-MIT.txt', 'licenses/emscripten-4.0.7.txt',
-                 'licenses/emsdk-4.0.7.txt', 'source/paintAZ.tar.gz'):
+                 'licenses/paintAZ-MIT.txt', 'licenses/emscripten-5.0.5.txt',
+                 'licenses/emsdk-5.0.5.txt', 'source/paintAZ.tar.gz'):
     if not (out / required).is_file():
         raise SystemExit(f'Missing distribution file: {required}')
 for name in ('paintAZ.js', 'paintAZ.wasm', 'qtloader.js', 'index.html', 'notices.html', 'source/paintAZ.tar.gz'):

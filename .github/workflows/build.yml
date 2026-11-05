@@ -23,17 +23,43 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             platform: linux-x86_64
-            qt-arch: gcc_64
+            qt-host: linux
+            qt-arch: linux_gcc_64
+            binary-arch: x86_64
+            executable: build/AppDir/AppRun
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+            qt-host: linux_arm64
+            qt-arch: linux_gcc_arm64
+            binary-arch: arm64
             executable: build/AppDir/AppRun
           - os: windows-2022
             platform: windows-x86_64
-            qt-arch: win64_msvc2019_64
+            qt-host: windows
+            qt-arch: win64_msvc2022_64
+            msvc-arch: x64
+            binary-arch: x86_64
+            executable: build/package/paintAZ/paintAZ.exe
+          - os: windows-11-arm
+            platform: windows-arm64
+            qt-host: windows_arm64
+            qt-arch: win64_msvc2022_arm64
+            msvc-arch: arm64
+            binary-arch: arm64
             executable: build/package/paintAZ/paintAZ.exe
           - os: macos-15-intel
             platform: macos-x86_64
+            qt-host: mac
             qt-arch: clang_64
+            binary-arch: x86_64
+            executable: build/paintAZ.app/Contents/MacOS/paintAZ
+          - os: macos-15
+            platform: macos-arm64
+            qt-host: mac
+            qt-arch: clang_64
+            binary-arch: arm64
             executable: build/paintAZ.app/Contents/MacOS/paintAZ
     defaults:
       run:
@@ -45,14 +71,19 @@ jobs:
         if: runner.os == 'Windows'
         uses: TheMrMilchmann/setup-msvc-dev@368ef7d1ee4d1171b31d4a7f67f4d954f903f5a9 # v4.1.0
         with:
-          arch: x64
+          arch: ${{ matrix.msvc-arch }}
+          toolset: "14.44"
 
       - name: Install Qt
         uses: jurplel/install-qt-action@b344308e4483fc892e0d27b3cd1b173ebdd95f06 # v4.5.0
         with:
-          version: '5.15.2'
+          version: '6.12.0'
+          host: ${{ matrix.qt-host }}
           arch: ${{ matrix.qt-arch }}
           cache: true
+          # aqt 3.3.0 cannot resolve the split Qt 6.11+ Windows repositories.
+          aqtsource: https://github.com/miurahr/aqtinstall/archive/5a49f2b391ae8ee1d3c0dd87f8b33c1d49a4deb7.tar.gz
+          py7zrversion: '==1.1.4'
 
       - name: Set package name
         env:
@@ -65,49 +96,41 @@ jobs:
           fi
           echo "PACKAGE_NAME=paintAZ-${version}-${PACKAGE_PLATFORM}" >> "$GITHUB_ENV"
 
-      - name: Configure
-        run: |
-          mkdir -p build dist
-          cd build
-          qmake ../paintAZ.pro CONFIG+=release CONFIG-=debug CONFIG-=debug_and_release
-
-      - name: Build on Linux and macOS
-        if: runner.os != 'Windows'
-        run: make -C build -j3
-
-      - name: Build on Windows
-        if: runner.os == 'Windows'
-        shell: cmd
-        working-directory: build
-        run: nmake /NOLOGO
-
-      - name: Configure shared workflow tests
-        run: |
-          mkdir -p build/tests
-          cd build/tests
-          qmake ../../tests/desktop/tests.pro CONFIG+=release CONFIG-=debug CONFIG-=debug_and_release
-
-      - name: Test shared workflows on Windows
-        if: runner.os == 'Windows'
-        shell: cmd
-        working-directory: build/tests
+      - name: Configure desktop and shared workflow tests
         env:
-          QT_QPA_PLATFORM: offscreen
+          BINARY_ARCH: ${{ matrix.binary-arch }}
         run: |
-          nmake /NOLOGO
-          paintAZ-tests.exe
+          mkdir -p dist
+          args=()
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            args+=("-DCMAKE_OSX_ARCHITECTURES=$BINARY_ARCH")
+          fi
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" -DBUILD_TESTING=ON "${args[@]}"
 
-      - name: Test shared workflows on Linux and macOS
-        if: runner.os != 'Windows'
-        working-directory: build/tests
+      - name: Build application and native tests
+        run: cmake --build build --parallel 3
+
+      - name: Verify native executable architecture
         env:
-          QT_QPA_PLATFORM: offscreen
+          BINARY_ARCH: ${{ matrix.binary-arch }}
         run: |
-          make -j3
-          ./paintAZ-tests
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            binary=build/paintAZ.exe
+          elif [[ "$RUNNER_OS" == macOS ]]; then
+            binary=build/paintAZ.app/Contents/MacOS/paintAZ
+          else
+            binary=build/paintAZ
+          fi
+          python .github/scripts/check-architecture.py "$binary" "$BINARY_ARCH"
+
+      - name: Test shared workflows natively
+        run: ctest --test-dir build --output-on-failure
 
       - name: Package Linux AppImage
         if: runner.os == 'Linux'
+        env:
+          BINARY_ARCH: ${{ matrix.binary-arch }}
         run: bash .github/scripts/package-linux.sh
 
       - name: Deploy Windows dependencies
@@ -115,12 +138,19 @@ jobs:
         run: |
           mkdir -p build/package/paintAZ
           cp build/paintAZ.exe LICENSE build/package/paintAZ/
-          windeployqt --release --no-translations --compiler-runtime build/package/paintAZ/paintAZ.exe
+          "$QT_ROOT_DIR/bin/windeployqt" --release --no-translations --no-compiler-runtime build/package/paintAZ/paintAZ.exe
+
+      - name: Bundle matching app-local Windows CRT
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          BINARY_ARCH: ${{ matrix.binary-arch }}
+        run: .github/scripts/package-windows-runtime.ps1 -Architecture $env:BINARY_ARCH
 
       - name: Deploy macOS dependencies
         if: runner.os == 'macOS'
         run: |
-          macdeployqt build/paintAZ.app -always-overwrite
+          "$QT_ROOT_DIR/bin/macdeployqt" build/paintAZ.app -always-overwrite
           cp LICENSE build/paintAZ.app/Contents/Resources/LICENSE
           codesign --force --deep --sign - build/paintAZ.app
 
