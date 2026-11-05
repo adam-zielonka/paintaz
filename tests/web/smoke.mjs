@@ -118,6 +118,20 @@ try {
   await page.waitForFunction(() => document.body.dataset.ready === 'true', {timeout:90000});
   await page.locator('canvas').first().waitFor({state:'visible'});
   await page.screenshot({path:path.join(output,'startup.png')});
+  // The first launch presents tips. Enter accepts the default checked opt-out.
+  await page.locator('canvas').nth(1).waitFor({state:'visible'});
+  await shortcut('Enter');
+  await page.waitForFunction(() => document.querySelectorAll('canvas').length === 1);
+  await page.reload();
+  await page.waitForFunction(() => document.body.dataset.ready === 'true', {timeout:90000});
+  await tick();
+  assert.equal(await page.locator('canvas').count(), 1, 'welcome preference survives reload');
+  await shortcut('F1');
+  await page.locator('canvas').nth(1).waitFor({state:'visible'});
+  await page.screenshot({path:path.join(output,'quick-start.png')});
+  await shortcut('Escape');
+  await page.waitForFunction(() => document.querySelectorAll('canvas').length === 1);
+  report.tests.push('welcome on first launch, persisted opt-out, Help/F1 reopens tips');
   console.log('READY',await page.locator('canvas').first().boundingBox());
   if (!args.includes('--startup-only')) {
     const box=await page.locator('canvas').first().boundingBox();

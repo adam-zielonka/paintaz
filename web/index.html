@@ -7,13 +7,11 @@
   <style>
     html,body { margin:0; height:100%; font:14px system-ui,sans-serif; background:#fff; color:#222 }
     body { display:flex; flex-direction:column }
-    header { padding:6px 12px; display:flex; gap:16px; flex-wrap:wrap }
     #screen { flex:1; min-height:0; position:relative; overflow:hidden; touch-action:none }
     #status { padding:8px }
   </style>
 </head>
 <body>
-  <header><strong>Paint AZ</strong><span>Open imports an image. Save downloads a new PNG.</span><a href="notices.html">Licenses, source &amp; help</a></header>
   <div id="status" role="status">Loading Qt WebAssembly…</div>
   <div id="screen"></div>
   <script src="paintAZ.js"></script>

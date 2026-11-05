@@ -2,6 +2,11 @@
 #include "ui_mainwindow.h"
 #include <QFileInfo>
 #include <QPointer>
+#include <QCheckBox>
+#include <QDialogButtonBox>
+#include <QSettings>
+#include <QVBoxLayout>
+#include <QScreen>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -79,19 +84,22 @@ MainWindow::MainWindow(QWidget *parent) :
     mywidget->setDrawSize(drawSizeSpinBox);
     setCursor(Qt::ArrowCursor);
 
-    icons8Link = new QPushButton(this);
-    icons8Link->setText(" icons8.com ");
-    icons8Link->setStyleSheet("text-decoration: underline; color: blue");
-    myLink = new QPushButton(this);
-    myLink->setText(" adamzielonka.pro ");
-    myLink->setStyleSheet("text-decoration: underline; color: blue");
-    ui->toolBarAbout->addWidget(new QLabel("Icons from: ", this));
-    ui->toolBarAbout->addWidget(icons8Link);
-    ui->toolBarAbout->addSeparator();
-    ui->toolBarAbout->addWidget(new QLabel("Author: ", this));
-    ui->toolBarAbout->addWidget(myLink);
-    connect(icons8Link,SIGNAL(clicked()),this,SLOT(icons8LinkClicked()));
-    connect(myLink,SIGNAL(clicked()),this,SLOT(myLinkClicked()));
+    auto *help = menuBar()->addMenu(tr("&Help"));
+    help->setObjectName("menuHelp");
+    auto *quickStart = help->addAction(tr("Quick start…"), this, &MainWindow::showQuickStart);
+    quickStart->setObjectName("actionQuickStart");
+    quickStart->setShortcut(QKeySequence(Qt::Key_F1));
+    auto *notices = help->addAction(tr("Licenses, source && help"), this, [] {
+#ifdef Q_OS_WASM
+        QDesktopServices::openUrl(QUrl("notices.html"));
+#else
+        QDesktopServices::openUrl(QUrl("https://github.com/adam-zielonka/paintaz#readme"));
+#endif
+    });
+    notices->setObjectName("actionLicenses");
+    help->addSeparator();
+    auto *about = help->addAction(tr("About Paint AZ…"), this, &MainWindow::showAbout);
+    about->setObjectName("actionAbout");
 }
 
 MainWindow::~MainWindow()
@@ -167,16 +175,81 @@ void MainWindow::setItalicsFont()
                                          "color: white");
 }
 
-void MainWindow::icons8LinkClicked()
+void MainWindow::showWelcomeIfNeeded()
 {
-    QString link = "https://icons8.com/";
-    QDesktopServices::openUrl(QUrl(link));
+    if (!QSettings().value("welcome/doNotShowAgain", false).toBool())
+        showQuickStart();
 }
 
-void MainWindow::myLinkClicked()
+void MainWindow::showQuickStart()
 {
-    QString link = "https://adamzielonka.pro/";
-    QDesktopServices::openUrl(QUrl(link));
+    if (auto *existing = findChild<QDialog *>("welcomeDialog")) {
+        existing->show();
+        existing->raise();
+        return;
+    }
+    auto *dialog = new QDialog(this);
+    dialog->setObjectName("welcomeDialog");
+    dialog->setWindowTitle(tr("Welcome to Paint AZ"));
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    auto *layout = new QVBoxLayout(dialog);
+    auto *intro = new QLabel(dialog);
+    intro->setWordWrap(true);
+    intro->setTextFormat(Qt::RichText);
+#ifdef Q_OS_WASM
+    intro->setText(tr("<h3>A little space to create</h3>"
+        "<p><b>Open</b> imports a PNG, JPEG or BMP. <b>Save</b> downloads a new PNG.</p>"
+        "<p><b>Download your drawing before leaving or reloading.</b> "
+        "Drawings stay in browser memory; there is no autosave and images are not uploaded.</p>"
+        "<p>Choose a drawing tool, then drag on the canvas. Use <b>Ctrl+Z</b> to undo.</p>"
+        "<p>Find these tips, licenses, source and author credits in <b>Help</b> at any time.</p>"));
+#else
+    intro->setText(tr("<h3>A little space to create</h3>"
+        "<p><b>Open</b> loads an image. Use <b>Save As</b> to choose a file for a new drawing; "
+        "<b>Save</b> updates that file.</p>"
+        "<p>Choose a drawing tool, then drag on the canvas. Use <b>Ctrl+Z</b> to undo.</p>"
+        "<p>Save your work before closing; there is no autosave.</p>"
+        "<p>Find these tips, licenses, source and author credits in <b>Help</b> at any time.</p>"));
+#endif
+    layout->addWidget(intro);
+    auto *remember = new QCheckBox(tr("Don't show this again"), dialog);
+    remember->setObjectName("doNotShowAgain");
+    remember->setChecked(true);
+    layout->addWidget(remember);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok, dialog);
+    buttons->button(QDialogButtonBox::Ok)->setText(tr("Start drawing"));
+    layout->addWidget(buttons);
+    connect(buttons, &QDialogButtonBox::accepted, dialog, &QDialog::accept);
+    connect(dialog, &QDialog::finished, this, [remember] {
+        QSettings settings;
+        settings.setValue("welcome/doNotShowAgain", remember->isChecked());
+        settings.sync();
+    });
+    dialog->resize(qMin(480, screen()->availableGeometry().width() - 24), dialog->sizeHint().height());
+    dialog->open();
+}
+
+void MainWindow::showAbout()
+{
+    auto *dialog = new QDialog(this);
+    dialog->setObjectName("aboutDialog");
+    dialog->setWindowTitle(tr("About Paint AZ"));
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    auto *layout = new QVBoxLayout(dialog);
+    auto *credits = new QLabel(tr("<h3>Paint AZ</h3>"
+        "<p>A cross-platform painting application built with Qt %1.</p>"
+        "<p>Author: <a href=\"https://adamzielonka.pro/\">adamzielonka.pro</a><br>"
+        "Icons from: <a href=\"https://icons8.com/\">icons8.com</a></p>"
+        "<p>Paint AZ source code is MIT licensed. See <b>Help → Licenses, source &amp; help</b> "
+        "for source code, third-party licenses and usage details.</p>").arg(QString::fromLatin1(qVersion())), dialog);
+    credits->setWordWrap(true);
+    credits->setOpenExternalLinks(true);
+    layout->addWidget(credits);
+    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
+    layout->addWidget(buttons);
+    connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
+    dialog->resize(qMin(480, screen()->availableGeometry().width() - 24), dialog->sizeHint().height());
+    dialog->open();
 }
 
 void MainWindow::on_actionDraw_triggered()

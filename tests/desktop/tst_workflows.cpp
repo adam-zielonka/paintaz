@@ -1,12 +1,71 @@
 #include <QtTest>
 #include <QDialogButtonBox>
 #include <QTemporaryDir>
+#include <QSettings>
+#include <QCheckBox>
+#include <QToolBar>
+#include <QMenu>
 #include "mainwindow.h"
 
 class Workflows : public QObject
 {
     Q_OBJECT
+    QTemporaryDir settingsDirectory;
 private slots:
+    void initTestCase()
+    {
+        QVERIFY(settingsDirectory.isValid());
+        QCoreApplication::setOrganizationName("paintAZ-tests");
+        QCoreApplication::setApplicationName("workflows");
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settingsDirectory.path());
+    }
+    void helpAndWelcome()
+    {
+        QSettings().clear();
+        MainWindow window;
+        window.show();
+        QVERIFY(window.findChild<QMenu *>("menuHelp"));
+        QVERIFY(!window.findChild<QToolBar *>("toolBarAbout"));
+        window.showWelcomeIfNeeded();
+        auto *welcome = window.findChild<QDialog *>("welcomeDialog");
+        QVERIFY(welcome);
+        QVERIFY(welcome->isVisible());
+        auto *remember = welcome->findChild<QCheckBox *>("doNotShowAgain");
+        QVERIFY(remember);
+        QVERIFY(remember->isChecked());
+        welcome->accept();
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QVERIFY(QSettings().value("welcome/doNotShowAgain").toBool());
+        MainWindow reopened;
+        reopened.showWelcomeIfNeeded();
+        QVERIFY(!reopened.findChild<QDialog *>("welcomeDialog"));
+        // Help still opens the tips; opting back in persists across windows.
+        reopened.findChild<QAction *>("actionQuickStart")->trigger();
+        welcome = reopened.findChild<QDialog *>("welcomeDialog");
+        QVERIFY(welcome);
+        welcome->findChild<QCheckBox *>("doNotShowAgain")->setChecked(false);
+        welcome->reject();
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QVERIFY(!QSettings().value("welcome/doNotShowAgain").toBool());
+        MainWindow optedIn;
+        optedIn.showWelcomeIfNeeded();
+        welcome = optedIn.findChild<QDialog *>("welcomeDialog");
+        QVERIFY(welcome);
+        // Closing with Escape/X observes the same checkbox as Start drawing.
+        welcome->reject();
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QVERIFY(QSettings().value("welcome/doNotShowAgain").toBool());
+        optedIn.findChild<QAction *>("actionAbout")->trigger();
+        auto *about = optedIn.findChild<QDialog *>("aboutDialog");
+        QVERIFY(about);
+        QString text;
+        for (auto *label : about->findChildren<QLabel *>()) text += label->text();
+        QVERIFY(text.contains("https://icons8.com/"));
+        QVERIFY(text.contains("https://adamzielonka.pro/"));
+        QVERIFY(text.contains(QString::fromLatin1(qVersion())));
+        about->reject();
+    }
     void stationaryClickHistory()
     {
         MainWindow window;

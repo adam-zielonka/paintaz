@@ -42,16 +42,15 @@ public:
     QSpinBox * drawSizeSpinBox;
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
-    QPushButton *icons8Link;
-    QPushButton *myLink;
 
 public slots:
     void setPenColor();
     void setBrushColor();
     void setBoldFont();
     void setItalicsFont();
-    void icons8LinkClicked();
-    void myLinkClicked();
+    void showWelcomeIfNeeded();
+    void showQuickStart();
+    void showAbout();
 
 private slots:
     void on_actionDraw_triggered();

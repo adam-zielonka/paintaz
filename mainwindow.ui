@@ -171,17 +171,6 @@
    <addaction name="actionDraw_Size_Up"/>
    <addaction name="actionDraw_Size_Down"/>
   </widget>
-  <widget class="QToolBar" name="toolBarAbout">
-   <property name="windowTitle">
-    <string>About</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>BottomToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-  </widget>
   <action name="actionDraw">
    <property name="icon">
     <iconset resource="resources.qrc">
