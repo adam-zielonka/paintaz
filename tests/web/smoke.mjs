@@ -68,8 +68,8 @@ const newImage = async (width,height,accept=true,pointer=false) => {
     const surface=await page.locator('canvas').first().boundingBox();
     await page.mouse.click(29,surface.y+43);await tick();
   } else await shortcut('Control+n');
-  await page.locator('canvas').nth(1).waitFor({state:'visible'});
-  const dialog=await page.locator('canvas').nth(1).boundingBox();
+  await page.locator('canvas:visible').nth(1).waitFor({state:'visible'});
+  const dialog=await page.locator('canvas:visible').nth(1).boundingBox();
   await page.mouse.click(dialog.x+150,dialog.y+25);
   await page.keyboard.press('Control+a'); await page.keyboard.type(String(width));
   await page.keyboard.press('Tab'); await page.keyboard.press('Control+a'); await page.keyboard.type(String(height));
@@ -119,7 +119,7 @@ try {
   await page.locator('canvas').first().waitFor({state:'visible'});
   await page.screenshot({path:path.join(output,'startup.png')});
   // The first launch presents tips. Enter accepts the default checked opt-out.
-  await page.locator('canvas').nth(1).waitFor({state:'visible'});
+  await page.locator('canvas:visible').nth(1).waitFor({state:'visible'});
   await shortcut('Enter');
   await page.locator('canvas:visible').nth(1).waitFor({state:'hidden'});
   await page.reload();
@@ -127,7 +127,7 @@ try {
   await tick();
   assert.equal(await page.locator('canvas:visible').count(), 1, 'welcome preference survives reload');
   await shortcut('Shift+F1');
-  await page.locator('canvas').nth(1).waitFor({state:'visible'});
+  await page.locator('canvas:visible').nth(1).waitFor({state:'visible'});
   await page.screenshot({path:path.join(output,'quick-start.png')});
   await shortcut('Escape');
   await page.locator('canvas:visible').nth(1).waitFor({state:'hidden'});
@@ -173,9 +173,11 @@ try {
     report.tests.push('new accept/cancel/invalid size, line pixels, undo/redo');
     const color = async (button, hex, accept=true) => {
       await page.mouse.click(button,box.y+43); await tick();
-      await page.mouse.click(790,575); await page.keyboard.press('Control+a'); await page.keyboard.type(hex);
+      const dialog = await page.locator('canvas:visible').nth(1).boundingBox();
+      await page.mouse.click(dialog.x+dialog.width-126,dialog.y+dialog.height-64);
+      await page.keyboard.press('Control+a'); await page.keyboard.type(hex);
       await page.screenshot({path:path.join(output,`${button===530?'pen':'brush'}-${accept?'accept':'cancel'}.png`)});
-      await page.mouse.click(accept?779:865,614); await tick();
+      await page.mouse.click(dialog.x+dialog.width-(accept?137:51),dialog.y+dialog.height-24); await tick();
     };
     await color(530,'#e02030');
     await color(530,'#00ffff',false);
@@ -233,6 +235,15 @@ try {
     await page.setViewportSize({width:390,height:844});await tick();
     const narrow=await page.locator('canvas').first().boundingBox();
     assert.ok(narrow.width<=390);
+    await shortcut('Shift+F1');
+    const tips = page.locator('canvas:visible').nth(1);
+    await tips.waitFor({state:'visible'});
+    const tipsBox = await tips.boundingBox();
+    assert.ok(tipsBox.x>=0 && tipsBox.x+tipsBox.width<=390, 'tips fit narrow viewport');
+    assert.ok(tipsBox.y>=0 && tipsBox.y+tipsBox.height<=844, 'tips controls remain reachable');
+    await page.screenshot({path:path.join(output,'narrow-welcome.png')});
+    await shortcut('Enter');
+    await tips.waitFor({state:'hidden'});
     await newImage(96,72,true,true);
     await shortcut('1');
     const touch=await context.newCDPSession(page);
