@@ -20,6 +20,16 @@ web build. This is the desktop Qt interface, with limited mobile ergonomics.
 The web site includes complete corresponding source and third-party notices;
 the application's own source remains MIT licensed.
 
+## Help and first launch
+
+The **Help** menu contains **Quick start** (F1), **Licenses, source & help**,
+and **About Paint AZ**, including author and Icons8 credits.
+The first launch shows a short welcome dialog with **Don't show this again**
+checked by default. Closing it remembers that choice on this computer or in
+this browser. Open **Help → Quick start** to see the tips again; uncheck the
+box there to show them on subsequent launches. Clearing browser site data also
+resets the preference.
+
 ## Downloads
 
 Download the latest version from [GitHub Releases](https://github.com/adam-zielonka/paintaz/releases/latest):

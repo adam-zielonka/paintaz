@@ -151,6 +151,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           "$QT_ROOT_DIR/bin/macdeployqt" build/paintAZ.app -always-overwrite
+          mkdir -p build/paintAZ.app/Contents/Resources
           cp LICENSE build/paintAZ.app/Contents/Resources/LICENSE
           codesign --force --deep --sign - build/paintAZ.app
 
