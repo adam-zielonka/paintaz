@@ -22,7 +22,7 @@ the application's own source remains MIT licensed.
 
 ## Help and first launch
 
-The **Help** menu contains **Quick start** (F1), **Licenses, source & help**,
+The **Help** menu contains **Quick start** (Shift+F1), **Licenses, source & help**,
 and **About Paint AZ**, including author and Icons8 credits.
 The first launch shows a short welcome dialog with **Don't show this again**
 checked by default. Closing it remembers that choice on this computer or in

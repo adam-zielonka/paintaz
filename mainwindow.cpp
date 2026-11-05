@@ -88,7 +88,7 @@ MainWindow::MainWindow(QWidget *parent) :
     help->setObjectName("menuHelp");
     auto *quickStart = help->addAction(tr("Quick start…"), this, &MainWindow::showQuickStart);
     quickStart->setObjectName("actionQuickStart");
-    quickStart->setShortcut(QKeySequence(Qt::Key_F1));
+    quickStart->setShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F1));
     auto *notices = help->addAction(tr("Licenses, source && help"), this, [] {
 #ifdef Q_OS_WASM
         QDesktopServices::openUrl(QUrl("notices.html"));
