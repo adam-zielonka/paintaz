@@ -14,6 +14,7 @@ for name in ('paintAZ.js', 'paintAZ.wasm', 'qtloader.js'):
 for source in Path('web').iterdir():
     if source.is_file():
         shutil.copyfile(source, out / source.name)
+shutil.copyfile('packaging/paintAZ.svg', out / 'paintAZ.svg')
 source_dir = out / 'source'
 source_dir.mkdir(exist_ok=True)
 sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
@@ -58,7 +59,7 @@ for required in ('licenses/qtbase/LICENSES/GPL-3.0-only.txt',
                  'licenses/emsdk-5.0.5.txt', 'source/paintAZ.tar.gz'):
     if not (out / required).is_file():
         raise SystemExit(f'Missing distribution file: {required}')
-for name in ('paintAZ.js', 'paintAZ.wasm', 'qtloader.js', 'index.html', 'notices.html', 'source/paintAZ.tar.gz'):
+for name in ('paintAZ.js', 'paintAZ.wasm', 'qtloader.js', 'paintAZ.svg', 'index.html', 'notices.html', 'source/paintAZ.tar.gz'):
     data = (out / name).read_bytes()
     manifest['files'][name] = {'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
 (out / 'build-info.json').write_text(json.dumps(manifest, indent=2) + '\n')

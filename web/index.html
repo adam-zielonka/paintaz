@@ -8,11 +8,19 @@
     html,body { margin:0; height:100%; font:14px system-ui,sans-serif; background:#fff; color:#222 }
     body { display:flex; flex-direction:column }
     #screen { flex:1; min-height:0; position:relative; overflow:hidden; touch-action:none }
-    #status { padding:8px }
+    #status { position:fixed; inset:0; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; box-sizing:border-box; padding:24px; background:#fff; text-align:center; overflow:auto }
+    #status[hidden] { display:none }
+    #status img { width:96px; height:96px }
+    #status .app-name { margin:0; font-size:24px; font-weight:600 }
+    #status-message { max-width:32rem; margin:0; color:#555; overflow-wrap:anywhere }
   </style>
 </head>
 <body>
-  <div id="status" role="status">Loading Qt WebAssembly…</div>
+  <div id="status" role="status" lang="pl">
+    <img src="paintAZ.svg" width="96" height="96" alt="">
+    <p class="app-name">Paint AZ</p>
+    <p id="status-message">Ładowanie aplikacji…</p>
+  </div>
   <div id="screen"></div>
   <script src="paintAZ.js"></script>
   <script src="qtloader.js"></script>
@@ -21,12 +29,13 @@
     // fallback so Save always downloads a new file and never retains a file handle.
     Object.defineProperty(window, 'showOpenFilePicker', {value:undefined, configurable:true});
     const status = document.getElementById('status');
+    const statusMessage = document.getElementById('status-message');
     qtLoad({qt: {
       entryFunction: window.paintAZ_entry,
       containerElements: [document.getElementById('screen')],
       onLoaded: () => { status.hidden = true; document.body.dataset.ready = 'true'; },
-      onExit: data => { status.hidden = false; status.textContent = 'Application exited: ' + JSON.stringify(data); }
-    }}).catch(error => { status.textContent = 'Unable to start. WebAssembly and WebGL are required. ' + error; console.error(error); });
+      onExit: data => { status.hidden = false; statusMessage.textContent = 'Aplikacja została zamknięta: ' + JSON.stringify(data); }
+    }}).catch(error => { status.hidden = false; statusMessage.textContent = 'Nie udało się uruchomić aplikacji. Wymagana jest obsługa WebAssembly i WebGL. ' + error; console.error(error); });
   </script>
 </body>
 </html>

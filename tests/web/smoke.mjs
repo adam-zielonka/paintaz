@@ -20,7 +20,7 @@ else {
       if (!file.startsWith(root + path.sep)) throw new Error('Invalid path');
       const stats = await fs.stat(file);
       const data = req.method === 'HEAD' ? undefined : await fs.readFile(file);
-      const type = { '.wasm': 'application/wasm', '.js': 'text/javascript', '.html': 'text/html', '.json': 'application/json' };
+      const type = { '.wasm': 'application/wasm', '.js': 'text/javascript', '.html': 'text/html', '.json': 'application/json', '.svg': 'image/svg+xml' };
       res.writeHead(200, { 'Content-Type': type[path.extname(file)] || 'application/octet-stream', 'Content-Length':stats.size }); res.end(data);
     } catch { res.writeHead(404); res.end(); }
   });
